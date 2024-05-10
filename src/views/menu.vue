@@ -1,17 +1,7 @@
 <template>
   <div class="brand-container" ref="mainRef">
-    <MenuNavgation
-      ref="menunav"
-      :active="active"
-      :pageShow="btnShow"
-      @go="go"
-    ></MenuNavgation>
-    <page-show
-      v-if="maxPage > 1"
-      :currPage="curIndex + 1"
-      :totalPages="maxPage"
-      :customStyle="{ top: '4%', right: '16%' }"
-    ></page-show>
+    <MenuNavgation ref="menunav" :active="active" :pageShow="btnShow" @go="go"></MenuNavgation>
+    <page-show v-if="maxPage > 1" :currPage="curIndex + 1" :totalPages="maxPage" :customStyle="{ top: '4%', right: '16%' }"></page-show>
     <div class="wrap">
       <BoardHeader></BoardHeader>
       <section class="mainbox">
@@ -25,14 +15,9 @@
               v-for="(frame, index) in data"
               :key="index"
               :style="{
-                width:
-                  frame.frameWidth || computePercent(100, data.length || 1),
+                width: frame.frameWidth || computePercent(100, data.length || 1),
               }"
-              :class="[
-                !frame.animateFlag || frame.animateFlag == 'animate'
-                  ? `animate__animated ${frame.animate}`
-                  : '',
-              ]"
+              :class="[!frame.animateFlag || frame.animateFlag == 'animate' ? `animate__animated ${frame.animate}` : '']"
             >
               <div class="con-wrap">
                 <div class="frame-title">
@@ -42,13 +27,7 @@
                   <div class="right-bg"></div>
                 </div>
                 <div class="frame-con-wrap" :style="getStyle(frame)">
-                  <div
-                    @click="goPdfPage(item)"
-                    class="item"
-                    :class="getMode(frame)"
-                    v-for="(item, iindex) in frame.list"
-                    :key="iindex"
-                  >
+                  <div @click="goPdfPage(item)" class="item" :class="getMode(frame)" v-for="(item, iindex) in frame.list" :key="iindex">
                     <!-- <video
                       :id="iindex"
                       :src="item.url"
@@ -63,21 +42,12 @@
                         :src="item.url"
                         :id="'video' + new Date().getTime().toString() + iindex"
                       ></VideoPlayer> -->
-                      <VideoView
-                        :url="item.url"
-                        :id="'video' + new Date().getTime().toString() + iindex"
-                        ref="video"
-                      ></VideoView>
+                      <VideoView :url="item.url" :id="'video' + new Date().getTime().toString() + iindex" ref="video"></VideoView>
                     </div>
                     <div class="video-name" v-if="item.video">
                       {{ getVideoName(item) }}
                     </div>
-                    <img
-                      :src="item.img"
-                      alt=""
-                      :class="frame.imgHideBg ? 'big' : ''"
-                      v-else
-                    />
+                    <img :src="item.img" alt="" :class="frame.imgHideBg ? 'big' : ''" v-else />
                   </div>
                 </div>
               </div>
@@ -108,41 +78,17 @@
     </div>
     <div v-if="modal">
       <Modal v-model="modal" title="教材购买" width="1020">
-        <iframe
-          :src="extraSrc"
-          frameborder="0"
-          width="1000"
-          height="600"
-        ></iframe>
+        <iframe :src="extraSrc" frameborder="0" width="1000" height="600"></iframe>
         <template #footer>
           <div></div>
         </template>
       </Modal>
     </div>
     <div v-if="videoPage">
-      <Drawer
-        title="视频目录"
-        placement="left"
-        width="400"
-        :closable="false"
-        v-model="videoModel"
-      >
-        <Menu
-          width="100%"
-          :active-name="`${curIndex}_${activeIndex}`"
-          v-if="videoModel"
-        >
-          <MenuGroup
-            :title="`第${tindex + 1}页`"
-            v-for="(titem, tindex) in videoMenu"
-            :key="tindex"
-          >
-            <MenuItem
-              :name="`${tindex}_${sindex}`"
-              v-for="(sitem, sindex) in titem"
-              :key="`${tindex}_${sindex}`"
-              @click.native="go(tindex, sindex)"
-            >
+      <Drawer title="视频目录" placement="left" width="400" :closable="false" v-model="videoModel">
+        <Menu width="100%" :active-name="`${curIndex}_${activeIndex}`" v-if="videoModel">
+          <MenuGroup :title="`第${tindex + 1}页`" v-for="(titem, tindex) in videoMenu" :key="tindex">
+            <MenuItem :name="`${tindex}_${sindex}`" v-for="(sitem, sindex) in titem" :key="`${tindex}_${sindex}`" @click.native="go(tindex, sindex)">
               {{ getVideoName(sitem) }}
             </MenuItem>
           </MenuGroup>
@@ -299,7 +245,7 @@
           } else if (item.video) {
             // console.log('11111')
           } else {
-            this.$router.push(`/fileView?file=${encodeURI(item.url)}`)
+            this.$router.push(`/fileView?file=${encodeURI(item.url)}&type=${item.type}`)
           }
         } else if (item.list) {
           // console.log(item.path)
@@ -331,15 +277,9 @@
             const obj = JSON.parse(JSON.stringify(item))
             const page = Math.ceil(item.list.length / item.show)
             if (item.list.length > this.curIndex * item.show) {
-              obj.list = item.list.slice(
-                this.curIndex * item.show,
-                (this.curIndex + 1) * item.show
-              )
+              obj.list = item.list.slice(this.curIndex * item.show, (this.curIndex + 1) * item.show)
             } else {
-              obj.list = item.list.slice(
-                (page - 1) * item.show,
-                page * item.show
-              )
+              obj.list = item.list.slice((page - 1) * item.show, page * item.show)
             }
             obj['animateFlag'] = this.curIndex <= page - 1 ? 'animate' : 'no'
             this.videoPage = obj.list.length && obj.list[0].video ? true : false
@@ -421,15 +361,9 @@
           if (item.list.length > item.show) {
             this.btnShow = true
             if (item.list.length > this.curIndex * item.show) {
-              obj.list = item.list.slice(
-                this.curIndex * item.show,
-                (this.curIndex + 1) * item.show
-              )
+              obj.list = item.list.slice(this.curIndex * item.show, (this.curIndex + 1) * item.show)
             } else {
-              obj.list = item.list.slice(
-                (page - 1) * item.show,
-                page * item.show
-              )
+              obj.list = item.list.slice((page - 1) * item.show, page * item.show)
             }
           }
 

@@ -34,7 +34,7 @@
     mounted() {
       this.initArtPlayer('test.mp4', this.url)
 
-      // this.initArtPlayer('test.mp4', 'http://localhost/test.mp4')
+      //  this.initArtPlayer('test.mp4', '/video/1.1.1 机器视觉概述.mp4')
     },
     beforeDestroy() {
       if (this.art) {
@@ -104,9 +104,7 @@
                 hls.loadSource(url)
                 hls.attachMedia(video)
               } else {
-                const canPlay = video.canPlayType(
-                  'application/vnd.apple.mpegurl'
-                )
+                const canPlay = video.canPlayType('application/vnd.apple.mpegurl')
                 if (canPlay === 'probably' || canPlay == 'maybe') {
                   video.src = url
                 } else {
@@ -116,12 +114,12 @@
             },
           },
           contextmenu: [
-            {
-              html: '下载',
-              click: function () {
-                window.open(url)
-              },
-            },
+            // {
+            //   html: '下载',
+            //   click: function () {
+            //     window.open(url)
+            //   },
+            // },
           ],
           // settings: [
           //   {
@@ -187,9 +185,7 @@
 
         this.art.on('error', (count) => {
           if (count === 5) {
-            this.$Message.error(
-              '加载视频失败, 可能浏览器不支持此视频格式的解码，可尝试使用本地播放器打开'
-            )
+            this.$Message.error('加载视频失败, 可能浏览器不支持此视频格式的解码，可尝试使用本地播放器打开')
           }
         })
 

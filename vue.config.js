@@ -13,7 +13,6 @@ module.exports = {
   outputDir: 'dist', // 打包的目录,打包需修改对应的项目
 
   configureWebpack: {
-    devtool: 'source-map',
     resolve: {
       alias: {
         '@': path.resolve(__dirname, 'src'),

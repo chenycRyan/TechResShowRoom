@@ -6,7 +6,7 @@ Vue.use(VueRouter)
 const routes = [
   {
     path: '/',
-    redirect: '/home',
+    redirect: '/mesHome',
   },
   {
     path: '/mesHome',
@@ -30,6 +30,14 @@ const routes = [
     component: () => import('@/views/home.vue'),
     meta: {
       title: 'hb-kanban',
+    },
+  },
+  {
+    path: '/trade',
+    name: 'trade',
+    component: () => import('@/views/trade/index.vue'),
+    meta: {
+      title: '广东工贸',
     },
   },
   {

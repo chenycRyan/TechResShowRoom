@@ -70,7 +70,7 @@
 
     mounted() {
       axios
-        .post('https://www.robotxcould.cn/orion/users/common/login', {
+        .post('http://47.114.105.112:3108/orion/users/common/login', {
           userName: 'ZT-6',
           password: 'YTEyMzQ1Ng==',
         })

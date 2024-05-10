@@ -6,14 +6,10 @@
         <Particles></Particles>
         <div class="content-wrap">
           <div class="box" @click="go('/menu?id=topPlan')">
-            <img class="target-img" src="/images/home/dcgh.gif" alt="" />
+            <img class="target-img" src="/images/home/dcgh.png" alt="" />
             <div class="animate">
               <img class="one" :src="require('@/assets/imgs/a_1.png')" alt="" />
-              <img
-                class="three"
-                :src="require('@/assets/imgs/a_4.png')"
-                alt=""
-              />
+              <img class="three" :src="require('@/assets/imgs/a_4.png')" alt="" />
             </div>
             <div class="title">
               <div class="number">01</div>
@@ -21,14 +17,10 @@
             </div>
           </div>
           <div class="box" @click="go('/menu?id=trainProgram')">
-            <img src="/images/home/pyfa.gif" alt="" />
+            <img src="/images/home/pyfa.png" alt="" />
             <div class="animate">
               <img class="one" :src="require('@/assets/imgs/a_1.png')" alt="" />
-              <img
-                class="three"
-                :src="require('@/assets/imgs/a_4.png')"
-                alt=""
-              />
+              <img class="three" :src="require('@/assets/imgs/a_4.png')" alt="" />
             </div>
             <div class="title">
               <div class="number">02</div>
@@ -36,14 +28,10 @@
             </div>
           </div>
           <div class="box" @click="go('/menu?id=publish')">
-            <img src="/images/home/cbjc.gif" alt="" />
+            <img src="/images/home/cbjc.png" alt="" />
             <div class="animate">
               <img class="one" :src="require('@/assets/imgs/a_1.png')" alt="" />
-              <img
-                class="three"
-                :src="require('@/assets/imgs/a_4.png')"
-                alt=""
-              />
+              <img class="three" :src="require('@/assets/imgs/a_4.png')" alt="" />
             </div>
             <div class="title">
               <div class="number">03</div>
@@ -52,14 +40,10 @@
           </div>
 
           <div class="box" @click="go('/menu?id=books')">
-            <img src="/images/home/xbjc.gif" alt="" />
+            <img src="/images/home/xbjc.png" alt="" />
             <div class="animate">
               <img class="one" :src="require('@/assets/imgs/a_1.png')" alt="" />
-              <img
-                class="three"
-                :src="require('@/assets/imgs/a_4.png')"
-                alt=""
-              />
+              <img class="three" :src="require('@/assets/imgs/a_4.png')" alt="" />
             </div>
             <div class="title">
               <div class="number">04</div>
@@ -67,14 +51,10 @@
             </div>
           </div>
           <div class="box" @click="go('/menu?id=teachResources')">
-            <img src="/images/home/jxzy.gif" alt="" />
+            <img src="/images/home/jxzy.png" alt="" />
             <div class="animate">
               <img class="one" :src="require('@/assets/imgs/a_1.png')" alt="" />
-              <img
-                class="three"
-                :src="require('@/assets/imgs/a_4.png')"
-                alt=""
-              />
+              <img class="three" :src="require('@/assets/imgs/a_4.png')" alt="" />
             </div>
             <div class="title">
               <div class="number">05</div>
@@ -82,14 +62,10 @@
             </div>
           </div>
           <div class="box" @click="go('/showWeb')">
-            <img src="/images/home/ypt.gif" alt="" />
+            <img src="/images/home/ypt.png" alt="" />
             <div class="animate">
               <img class="one" :src="require('@/assets/imgs/a_1.png')" alt="" />
-              <img
-                class="three"
-                :src="require('@/assets/imgs/a_4.png')"
-                alt=""
-              />
+              <img class="three" :src="require('@/assets/imgs/a_4.png')" alt="" />
             </div>
             <div class="title">
               <div class="number">06</div>

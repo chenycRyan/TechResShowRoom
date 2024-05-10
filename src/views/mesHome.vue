@@ -19,26 +19,12 @@
             :key="index"
           >
             <template v-if="item.type === 'web'">
-              <div
-                @click="openPage(item.url)"
-                style="cursor: pointer; z-index: 9999"
-                class="title"
-              >
+              <div @click="openPage(item.url)" style="cursor: pointer; z-index: 9999" class="title">
                 {{ item.name }}
               </div>
               <div v-show="!item.loading" style="height: 100%">
-                <iframe
-                  v-show="!item.showError"
-                  :src="item.url"
-                  frameborder="0"
-                ></iframe>
-                <img
-                  v-show="item.showError"
-                  width="100%"
-                  height="100%"
-                  :src="item.errUrl"
-                  alt=""
-                />
+                <iframe v-show="!item.showError" :src="item.url" frameborder="0"></iframe>
+                <img v-show="item.showError" width="100%" height="100%" :src="item.errUrl" alt="" />
               </div>
               <div v-show="item.loading" class="loadingbar">
                 <Spin size="large"></Spin>
@@ -56,11 +42,7 @@
         </div>
       </section>
     </div>
-    <page-show
-      :currPage="currPage"
-      :totalPages="mesConfig.length"
-      :customStyle="{ top: '4%', right: '16%' }"
-    ></page-show>
+    <page-show :currPage="currPage" :totalPages="mesConfig.length" :customStyle="{ top: '4%', right: '16%' }"></page-show>
   </div>
 </template>
 
@@ -154,18 +136,17 @@
             ;(function (tIndex) {
               //设置请求超时时间
               that.$axios
-                .get(list[tIndex].testLink)
+                .get(list[tIndex].testLink, {
+                  headers: {
+                    Authorization: 'Bearer Mi5hZG1pbi40MGJiYTcyYS1lNDQ5LTRlNzktOWM3Yi04YzdmNmEwNGJkZWU=',
+                  },
+                })
                 .then(() => {
                   console.log(tIndex, '*---tIndex')
                   //判断是当前页面才执行赋值
-                  const boolPage =
-                    JSON.stringify(list) ===
-                    JSON.stringify(
-                      that.mesConfig[that.currentIndex - 1].urlList
-                    )
+                  const boolPage = JSON.stringify(list) === JSON.stringify(that.mesConfig[that.currentIndex - 1].urlList)
                   console.log(boolPage, 'boolPage')
                   if (boolPage) {
-                    list[tIndex].showError = false
                     list[tIndex].loading = false
                     that.$set(that.nowData, tIndex, list[tIndex])
                     that.handleAfterRender(list, tIndex)
@@ -173,11 +154,7 @@
                 })
                 .catch(() => {
                   console.log(tIndex, '*---tIndex')
-                  const boolPage =
-                    JSON.stringify(list) ===
-                    JSON.stringify(
-                      that.mesConfig[that.currentIndex - 1].urlList
-                    )
+                  const boolPage = JSON.stringify(list) === JSON.stringify(that.mesConfig[that.currentIndex - 1].urlList)
 
                   console.log(boolPage, 'boolPage')
                   if (boolPage) {
@@ -199,8 +176,7 @@
       //全部完成渲染
       handleAfterRender(list, tIndex) {
         if (tIndex === list.length) {
-          const resendInterval =
-            this.mesConfig[this.currentIndex - 1].resendInterval
+          const resendInterval = this.mesConfig[this.currentIndex - 1].resendInterval
           //图片无限刷新
           this.imgTimer = setInterval(() => {
             this.nowData.forEach((item) => {
@@ -260,8 +236,7 @@
           if (this.timer == null || this.timer == '') this.handleshuffling()
         }, 600000)
 
-        if (['PageDown', 'PageUp', 'Tab', 'Enter'].indexOf(key) != -1)
-          event.preventDefault()
+        if (['PageDown', 'PageUp', 'Tab', 'Enter'].indexOf(key) != -1) event.preventDefault()
         if (['PageDown', 'PageUp'].indexOf(key) != -1) {
           let time = new Date().getTime()
           let diff = time - this.lastTime
@@ -466,13 +441,11 @@
 </style>
 <style lang="scss">
   .slide-out-left {
-    -webkit-animation: slide-out-left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)
-      both;
+    -webkit-animation: slide-out-left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
     animation: slide-out-left 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
   }
   .slide-in-right {
-    -webkit-animation: slide-in-right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94)
-      both;
+    -webkit-animation: slide-in-right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
     animation: slide-in-right 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94) both;
   }
   @-webkit-keyframes slide-out-left {

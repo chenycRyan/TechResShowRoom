@@ -3,38 +3,85 @@
     <div class="wrap">
       <!-- <BoardHeader></BoardHeader> -->
       <section class="mainbox">
-        <section class="main-wrap">
-          <iframe
+        <Particles v-show="isShowCustom === true"></Particles>
+        <section class="main-wrap" v-show="isShowCustom === true">
+          <div
+            class="file-list"
+            :class="{
+              'file-list-12': layout == 1,
+              'file-error': isFileError,
+              'file-list-1': layout == 2,
+            }"
+            ref="filelist"
+          >
+            <div v-for="i in pageSize" :key="i" class="file-item" ref="fileItem" @click="showDoc(i, $event)"></div>
+          </div>
+          <div class="ctl-wrap">
+            <!-- <div class="btn-prev" @click="goPrev">上一页</div>
+            <div class="btn-next" @click="goNext">下一页</div> -->
+            <!-- <page-button
+              title="布局"
+              @click.native="goPrev"
+              :disabled="prevDisabled"
+            ></page-button> -->
+            <page-button title="上一页" @click.native="goPrev" :disabled="prevDisabled"></page-button>
+            <page-button title="下一页" @click.native="goNext" :disabled="nextDisabled"></page-button>
+          </div>
+        </section>
+        <section class="main-wrap" v-show="isShowCustom === false">
+          <!-- <embed
             v-show="filePath"
             height="100%"
             :src="filePath"
+            type="application/pdf"
             width="100%"
             class="pdf-viewer"
             id="pdfviewer"
-          />
+          /> -->
+          <!--  '/pdfjs/web/myviewer.html?file=' + encodeURIComponent(filePath) -->
+          <iframe :src="'/pdfjs/web/myviewer.html?file=' + encodeURIComponent(filePath)" width="100%" class="pdf-viewer iframe-viewer" id="pdfviewer" height="100%"></iframe>
         </section>
       </section>
-      <div
-        class="fullfile-wrap"
-        v-show="showFullfile"
-        ref="fullfile"
-        @click="showFullfile = false"
-      ></div>
+      <div class="fullfile-wrap" v-show="showFullfile" ref="fullfile" @click="showFullfile = false"></div>
     </div>
+    <div class="v-modal" tabindex="0" v-show="showFullfile" @click="showFullfile = false"></div>
     <div
-      class="v-modal"
-      tabindex="0"
-      v-show="showFullfile"
-      @click="showFullfile = false"
-    ></div>
-
+      class="sphere"
+      id="sphere"
+      v-if="showSphere"
+      @mousedown="sphereStart"
+      @mouseup="sphereEnd"
+      @click.stop="showctlToggle"
+      @touchstart="sphereStartTouch"
+      @touchmove="sphereMoveTouch"
+      @touchend="sphereEndTouch"
+    >
+      <div v-show="showctl" :class="{ animate__bounceIn: showctl }" class="animate__animated">
+        <div class="sphere-prev ctlbtn" @click.stop="goPrevSphere">
+          <div class="text">上一页</div>
+        </div>
+        <div class="sphere-next ctlbtn" @click.stop="goNextSphere">
+          <div class="text">下一页</div>
+        </div>
+        <div class="sphere-layout ctlbtn" @click.stop="changeLayoutSphere">
+          <div class="text">布局</div>
+        </div>
+      </div>
+    </div>
+    <page-show :currPage="currPage" :totalPages="totalPages" :customStyle="{ top: '4%', right: '16%' }" v-show="isShowCustom === true"></page-show>
+    <!-- homeButton="模式"
+    :extraButton="isShowCustom === true ? '布局' : ''" -->
     <MenuNavgation
-      :pageShow="false"
+      :pageShow="true"
       style="z-index: 102"
       ref="menuNav"
       @go="
         (para) => {
-          if (para == 'extra') {
+          if (para == 'prev') {
+            goPrevSphere()
+          } else if (para == 'next') {
+            goNextSphere()
+          } else if (para == 'extra') {
             changeLayoutSphere()
           } else if (para == 'cushome') {
             changeModeSphere()
@@ -43,18 +90,23 @@
       "
     ></MenuNavgation>
     <div v-show="loading" class="loading-section">
+      <!-- <div class="loading-content">
+        <div class="text">数据加载中</div>
+        <div class="dots">...</div>
+      </div> -->
       <div class="loading-img"></div>
     </div>
   </div>
 </template>
 
 <script>
+  import { setPos, getPos } from '@/utils/sphere'
   export default {
     data() {
       return {
         showSphere: false,
-        testFilePath:
-          'http://192.168.3.10:3182/static/OpenAPI安全认证库%20（Java）开发指南V1.1.3_20210716095939_20211203141454.pdf',
+        testFilePath: 'http://192.168.3.10:3182/static/OpenAPI安全认证库%20（Java）开发指南V1.1.3_20210716095939_20211203141454.pdf',
+        // https://www.huiborobot.com.cn:3183/static/OpenAPI安全认证库 （Java）开发指南V1.1.3_20210716095939_20211203141454.pdf
         filePath: '',
         pSrc: '',
         openType: 'custom',
@@ -78,39 +130,32 @@
         isLayoutUserSet: true, // 是否直接指定布局方式
         isFileError: false,
         reRenderTimer: null,
-
+        isShowCustom: false,
         loading: false,
         fileShowType: 'frame',
+        // pageSize: 8,
+        // pageRow: 2,
+        // pageCol: 4,
       }
     },
-    beforeDestroy() {},
-    mounted() {
-      this.loading = true
-      // 此处不能使用settimeout作为延时函数，因为pdf加载大文件时占用线程，会阻塞settimeout
-      const t = Date.now()
-      function mySetTimeout(cb, delay) {
-        let startTime = Date.now()
-        loop()
-        function loop() {
-          if (Date.now() - startTime >= delay) {
-            cb()
-            return
-          }
-          // window.requestAnimationFrame() 告诉浏览器——你希望执行一个动画，并且要求浏览器在下次重绘之前调用指定的回调函数更新动画。
-          // 该方法需要传入一个回调函数作为参数，该回调函数会在浏览器下一次重绘之前执行，理想状态下回调函数执行次数通常是每秒60次（也就是60fsp），
-          // 也就是每16.7ms 执行一次，但是并不一定保证为 16.7 ms。
-          requestAnimationFrame(loop)
-        }
+    beforeDestroy() {
+      if (this.showSphere) {
+        let box = document.getElementById('sphere')
+        let offsetLeft = box.offsetLeft
+        let offsetTop = box.offsetTop
+        setPos({ offsetLeft, offsetTop })
       }
-      mySetTimeout(() => {
-        console.log('mySetTimeout', Date.now() - t)
-        this.loading = false
-      }, 4000) //4005
-
+      window.removeEventListener('resize', this.reRender)
+    },
+    mounted() {
       this.$refs.menuNav.showMenu()
-      if (this.$route.query.file) {
-        this.filePath = decodeURI(this.$route.query.file)
-        // this.filePath = decodeURI('http://192.168.0.45/test.pdf')
+
+      if (this.$route.query.file && this.$route.query.type) {
+        // console.log(this.$route.query.type)
+        // console.log(window.bookConfig)
+        this.filePath = window.bookConfig[this.$route.query.type] + decodeURI(this.$route.query.file)
+
+        // this.filePath = this.testFilePath
       } else {
         this.isFileError = true
         this.$Message.error({
@@ -123,9 +168,76 @@
         if (process.env.NODE_ENV != 'development') return
       }
       this.moveInit()
+      if (this.isShowCustom) {
+        this.init()
+      } else {
+        this.loading = true
+        setTimeout(() => {
+          this.loading = false
+        }, 2000)
+      }
+      if (this.showSphere) this.setSpherePos()
+      window.addEventListener('resize', this.reRender)
     },
-
+    computed: {
+      totalPages() {
+        return Math.ceil(this.docPages / this.pageSize)
+      },
+      currPage() {
+        return Math.floor(this.currPageIndex / this.pageSize)
+      },
+      pageSize() {
+        var size = 0
+        switch (this.layout) {
+          case 0:
+            size = 8
+            break
+          case 1:
+            size = 2
+            break
+          case 2:
+            size = 1
+            break
+        }
+        return size
+      },
+      pageRow() {
+        var data = 0
+        switch (this.layout) {
+          case 0:
+            data = 2
+            break
+          case 1:
+            data = 1
+            break
+        }
+        return data
+      },
+      pageCol() {
+        var data = 0
+        switch (this.layout) {
+          case 0:
+            data = 4
+            break
+          case 1:
+            data = 2
+            break
+        }
+        return data
+      },
+    },
     methods: {
+      frameExec(methods) {
+        let frameContent = document.getElementById('pdfviewer').contentWindow.exportMethods
+        switch (methods) {
+          case 'next':
+            frameContent.next()
+            break
+          case 'prev':
+            frameContent.prev()
+            break
+        }
+      },
       fullScreen() {
         var element = document.getElementById('pdfviewer')
         if (element.requestFullscreen) {
@@ -138,10 +250,438 @@
           element.webkitRequestFullscreen()
         }
       },
+      setSpherePos() {
+        let pos = getPos()
+        let box = document.getElementById('sphere')
+        if (pos && pos.offsetLeft && pos.offsetTop) {
+          box.style.left = pos.offsetLeft + 'px'
+          box.style.top = pos.offsetTop + 'px'
+        }
+      },
+      init() {
+        this.loading = true
+        let _this = this
+        const pdfjsLib = window.pdfjsLib
+        // const pdfjsLib = require('pdfjs-dist/legacy/build/pdf.js')
+        //
+        const pdfPath = this.filePath || this.testFilePath
+        // The workerSrc property shall be specified.
+        pdfjsLib.GlobalWorkerOptions.workerSrc = '/pdfjs/build/pdf.worker.js'
+        // pdfjsLib.GlobalWorkerOptions.workerSrc = require('pdfjs-dist/build/pdf.worker.js')
+        // Will be using promises to load document, pages and misc data instead of
+        // callback.
+        const loadingTask = pdfjsLib.getDocument({
+          url: pdfPath,
+          useWorkerFetch: false,
+          cMapPacked: true,
+          cMapUrl: '/pdfjs/web/cmaps/',
+        })
+        setTimeout(() => {
+          _this.loading = false
+        }, 5000)
+        loadingTask.promise
+          .then(function (doc) {
+            const numPages = doc.numPages
+            console.log('# Document Loaded')
+            console.log('Number of Pages: ' + numPages)
+            _this.doc = doc
+            _this.docPages = numPages
+            // 第一次加载文件时 小于一页的时候 采用1*2布局
+            if (_this.isLayoutUserSet === false) {
+              if (numPages < _this.pageSize) {
+                _this.layout = 1
+              } else {
+                _this.layout = 0
+              }
+            }
+            // 布局结构确认后, 根据结构渲染内容
+            _this.$nextTick(() => {
+              _this.initFileBox()
+              _this.goNext()
+            })
+          })
+          .catch((e) => {
+            _this.loading = false
+            if (e.name == 'MissingPDFException') {
+              this.isFileError = true
+              this.$Message.error({
+                content: '文件不存在, 即将返回上一页面',
+                duration: 2,
+                onClose: () => {
+                  this.$router.go(-1)
+                },
+              })
+            }
+          })
+      },
+      initFileBox() {
+        var fileItemList = this.$refs.fileItem
+        var pagebox = fileItemList[0]
+        var pageHeight = pagebox.offsetHeight
+        var pageWidth = pagebox.offsetWidth
+        this.fileViewSize = {
+          pageHeight,
+          pageWidth,
+        }
+        this.fileItemList = fileItemList
+      },
+      showDoc(pagenum, event) {
+        if (event && event.target.nodeName.toLowerCase() != 'canvas') return
+        if (this.layout == 2) return
+        // 根据页面文件的位置得到真实的页码 当前文件的容器是提前布置的
+        if (event && this.currPageNum.length > 0) pagenum = this.currPageNum[pagenum]
+        this.showFullfile = true
+        this.fullPageNum = pagenum
+        var page = this.pageList[pagenum]
+        var clientHeight = document.body.clientHeight || document.documentElement.clientHeight
+        var boxheight = Math.floor(clientHeight * 0.8)
+        var scale = this.fileFullScale || 1
+        var viewport = page.getViewport({ scale: scale })
+        // console.log('showDoc', page, pagenum, this.$refs.fullfile)
+        if (this.fileFullScale == null) {
+          this.fileFullScale = Math.round((boxheight / viewport.height) * 1000) / 1000
+          scale = this.fileFullScale
+          viewport = page.getViewport({ scale: scale })
+        }
+        //
+        // console.log(
+        //   'Full boxheight 2',
+        //   document.body.clientHeight || document.documentElement.clientHeight,
+        //   boxheight,
+        //   document.documentElement.clientWidth,
+        //   viewport.height,
+        //   viewport.width,
+        //   scale
+        // )
+        // var outputScale = window.devicePixelRatio || 1
+        var outputScale = 1
+        var canvas = document.createElement('canvas')
+        var context = canvas.getContext('2d')
+        canvas.width = Math.floor(viewport.width * outputScale)
+        canvas.height = Math.floor(viewport.height * outputScale)
+        var renderContext = {
+          canvasContext: context,
+          viewport: viewport,
+        }
+        page.render(renderContext)
+        var box = this.$refs.fullfile
+        box.innerHTML = ''
+        box.className = 'fullfile-wrap'
+        setTimeout(() => {
+          box.className = 'fullfile-wrap animate__animated animate__backInRight'
+          box.appendChild(canvas)
+        }, 50)
+      },
+      append(page, box) {
+        var scale = this.fileScale || 1
+        var viewport = page.getViewport({ scale: scale })
+        if (this.fileScale == null) {
+          console.log('pageHeight docHeight1', this.fileViewSize.pageHeight, this.fileViewSize.pageWidth, viewport.height, viewport.width)
+          let hp = this.fileViewSize.pageHeight / viewport.height
+          let wp = (this.fileViewSize.pageWidth * 0.95) / viewport.width
+          let up = hp >= wp ? wp : hp
+          // this.fileScale =
+          //   Math.round((this.fileViewSize.pageHeight / viewport.height) * 1000) /
+          //   1000
+          this.fileScale = Math.round(up * 1000) / 1000
+          scale = this.fileScale
+          viewport = page.getViewport({ scale: scale })
+          // console.log(
+          //   'pageHeight docHeight Use',
+          //   this.fileViewSize.pageWidth,
+          //   this.fileViewSize.pageHeight,
+          //   viewport.width,
+          //   viewport.height,
+          //   'scale' + scale
+          // )
+        }
+
+        // console.log('viewport', viewport, scale)
+        // Support HiDPI-screens.
+        // var outputScale = window.devicePixelRatio || 1
+        var outputScale = 1
+        var canvas = document.createElement('canvas')
+        var context = canvas.getContext('2d')
+        canvas.width = Math.floor(viewport.width * outputScale)
+        canvas.height = Math.floor(viewport.height * outputScale)
+        var renderContext = {
+          canvasContext: context,
+          viewport: viewport,
+        }
+        page.render(renderContext)
+        box.className = 'file-item animate__animated animate__backInRight'
+        box.appendChild(canvas)
+      },
+      goNext() {
+        // console.log('goNext', this.currPageIndex)
+        this.prevDisabled = false
+        if (this.currPageIndex < this.docPages) {
+          this.currPageIndex = this.currPageIndex + this.pageSize
+          this.goShow()
+        } else {
+          this.$Message.info({
+            content: '已经到最后一页了',
+            duration: 2,
+          })
+          this.nextDisabled = true
+        }
+      },
+      goPrev() {
+        // console.log('goNext', this.currPageIndex)
+        this.nextDisabled = false
+        if (this.currPageIndex > this.pageSize) {
+          this.currPageIndex -= this.pageSize
+          this.goShow()
+        } else {
+          this.$Message.info({
+            content: '已经是第一页了',
+            duration: 2,
+          })
+          this.prevDisabled = true
+        }
+      },
+      goShow() {
+        var _this = this
+        var doc = this.doc
+        // var currPageIndex = this.currPageIndex
+        // console.log('goShow', currPageIndex)
+
+        var currPageNum = [0]
+        for (let i = this.pageSize - 1; i >= 0; i--) {
+          let pagenum = this.currPageIndex - i
+          let pagebox = this.fileItemList[(pagenum - 1) % this.pageSize]
+          currPageNum.push(pagenum)
+          pagebox.innerHTML = ''
+          pagebox.className = 'file-item'
+          if (pagenum > 0 && pagenum <= this.docPages) {
+            setTimeout(() => {
+              doc.getPage(pagenum).then(function (page) {
+                _this.append(page, pagebox)
+                _this.pageList[pagenum] = page
+                // console.log(
+                //   'load time /' + pagenum,
+                //   Math.round(new Date().getTime()) - time
+                // )
+              })
+            }, ((pagenum - 1) % this.pageCol) * 50)
+          }
+        }
+        this.currPageNum = currPageNum
+      },
+      showctlToggle() {
+        if (this.isMoving === false) {
+          this.showctl = !this.showctl
+        }
+      },
+      goPrevSphere() {
+        if (this.isShowCustom === false) {
+          if (this.fileShowType == 'frame') {
+            this.frameExec('prev')
+          }
+          return
+        }
+        if (this.showFullfile === false) {
+          this.goPrev()
+        } else {
+          var pagenum = this.fullPageNum || 1
+          if (pagenum > 1) {
+            pagenum = pagenum - 1
+            if (pagenum < this.currPageNum[1]) {
+              this.goPrev()
+            }
+            this.showDoc(pagenum, null)
+          } else {
+            this.$Message.info({
+              content: '已经是第一页了',
+              duration: 2,
+            })
+          }
+        }
+      },
+      goNextSphere() {
+        if (this.isShowCustom === false) {
+          if (this.fileShowType == 'frame') {
+            this.frameExec('next')
+          }
+          return
+        }
+
+        if (this.showFullfile === false) {
+          this.goNext()
+        } else {
+          var pagenum = this.fullPageNum || 1
+          pagenum = pagenum + 1
+          if (this.pageList.length - 1 < pagenum) {
+            if (this.currPageIndex < this.docPages) {
+              this.goNext()
+              let timer = setInterval(() => {
+                if (this.pageList[pagenum]) {
+                  this.showDoc(pagenum, null)
+                  clearInterval(timer)
+                }
+              }, 50)
+            } else {
+              this.$Message.info({
+                content: '已经到最后一页了',
+                duration: 2,
+              })
+            }
+          } else {
+            // 已经加载 需要翻页的时候
+            if (pagenum > this.currPageNum[this.currPageNum.length - 1]) {
+              this.goNext()
+            }
+            this.showDoc(pagenum, null)
+          }
+        }
+      },
       moveInit() {
         document.addEventListener('mouseleave', () => {
           document.onmousemove = document.onmouseup = null
         })
+      },
+      sphereStart(event) {
+        console.log('sphere', event)
+        let box = document.getElementById('sphere')
+        let _this = this
+        this.isMoving = false
+        // e.pageX, e.pageY 是鼠标在页面上的坐标
+        // box.offsetLeft, box.offsetTop 是元素相对于页面左上角的偏移位置
+        // disx, disy 便是鼠标相对于元素左上角的偏移位置
+        let boxw = box.offsetWidth || 80
+        let boxh = box.offsetHeight || 80
+        let disx = event.pageX - box.offsetLeft
+        let disy = event.pageY - box.offsetTop
+        document.onmousemove = function (e) {
+          if (_this.isMoving === false) {
+            _this.isMoving = true
+          }
+          let x, y
+          // e.pageX - disx  鼠标在页面上的位置 - 鼠标在元素中的偏移位置  得到的是元素相对于页面左上角的偏移位置
+          if (e.pageX - disx > 0) {
+            // 元素相对于页面左上角的偏移位置 大于0时
+            if (e.pageX - disx > document.documentElement.clientWidth - boxw) {
+              // 元素相对于页面左上角的偏移位置 移出到页面以外（右侧）
+              x = document.documentElement.clientWidth - boxw // 60是元素自身的宽高
+            } else {
+              x = e.pageX - disx
+            }
+          } else {
+            // 元素移到到页面以外（左侧）
+            x = 0
+          }
+
+          if (e.pageY - disy > 0) {
+            if (e.pageY - disy > document.documentElement.clientHeight - boxh) {
+              // 元素移动到页面以外（底部）
+              y = document.documentElement.clientHeight - boxh
+            } else {
+              y = e.pageY - disy
+            }
+          } else {
+            // 元素移动到页面以外（顶部）
+            y = 0
+          }
+
+          box.style.left = x + 'px'
+          box.style.top = y + 'px'
+        }
+      },
+      sphereMove(event) {
+        console.log('sphereM', event)
+      },
+      sphereEnd(event) {
+        console.log('sphereE', event)
+        document.onmousemove = null
+      },
+      sphereStartTouch(event) {
+        let box = document.getElementById('sphere')
+        this.isMoving = false
+        let touch = event.touches[0]
+        let { pageX, pageY } = touch
+        let disx = pageX - box.offsetLeft
+        let disy = pageY - box.offsetTop
+        this.touchData = { pageX, pageY, disx, disy }
+      },
+      sphereMoveTouch(event) {
+        let _this = this
+        let box = document.getElementById('sphere')
+        let touch = event.touches[0]
+        let { disx, disy } = this.touchData
+        let { pageX, pageY } = touch
+        let boxw = box.offsetWidth || 80
+        let boxh = box.offsetHeight || 80
+        if (_this.isMoving === false) {
+          _this.isMoving = true
+        }
+        let x, y
+        if (pageX - disx > 0) {
+          // 元素相对于页面左上角的偏移位置 大于0时
+          if (pageX - disx > document.documentElement.clientWidth - boxw) {
+            // 元素相对于页面左上角的偏移位置 移出到页面以外（右侧）
+            x = document.documentElement.clientWidth - boxw // 60是元素自身的宽高
+          } else {
+            x = pageX - disx
+          }
+        } else {
+          // 元素移到到页面以外（左侧）
+          x = 0
+        }
+
+        if (pageY - disy > 0) {
+          if (pageY - disy > document.documentElement.clientHeight - boxh) {
+            // 元素移动到页面以外（底部）
+            y = document.documentElement.clientHeight - boxh
+          } else {
+            y = pageY - disy
+          }
+        } else {
+          // 元素移动到页面以外（顶部）
+          y = 0
+        }
+
+        box.style.left = x + 'px'
+        box.style.top = y + 'px'
+      },
+      sphereEndTouch() {
+        // this.$Message.info('sphereE')
+      },
+      changeLayoutSphere() {
+        if (this.layout == 1) {
+          this.layout = 0
+        } else {
+          this.layout = 1
+        }
+        // 定义用户手动设置 下次渲染不会自动布局
+        this.isLayoutUserSet = true
+        this.reRender()
+      },
+      changeModeSphere() {
+        if (this.isShowCustom === false) {
+          if (this.currPageIndex === 0) this.init()
+          this.isShowCustom = true
+        } else {
+          this.isShowCustom = false
+        }
+      },
+      reRender() {
+        if (this.isFileError === true || this.reRenderTimer !== null || this.isShowCustom === false) return
+        this.currPageIndex = 0
+        this.fileViewSize = {}
+        this.fileScale = null
+        this.showFullfile = false
+        this.fileItemList.forEach((elem) => {
+          elem.innerHTML = ''
+          elem.className = 'file-item'
+        })
+        this.$Message.info({
+          content: '文件正在重新布局',
+          duration: 2,
+        })
+        this.reRenderTimer = setTimeout(() => {
+          this.init()
+          this.reRenderTimer = null
+        }, 500)
       },
     },
   }
@@ -320,9 +860,7 @@
       height: 60px;
       background: #3bf8fb;
       border-radius: 50%;
-      box-shadow: inset 26px -37px 38px 42px rgba(34, 109, 189, 0.5),
-        inset 9px -7px 35px -11px #304344,
-        inset 28px 30px 58px 4px rgba(40, 21, 21, 0.73);
+      box-shadow: inset 26px -37px 38px 42px rgba(34, 109, 189, 0.5), inset 9px -7px 35px -11px #304344, inset 28px 30px 58px 4px rgba(40, 21, 21, 0.73);
       z-index: 102;
       .ctlbtn {
         width: 0.94rem;
