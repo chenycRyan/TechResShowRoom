@@ -1,0 +1,101 @@
+// 文字的渐现-从左到右
+.maskFont {
+    margin: auto;
+    font-family: "Reggae One", cursive;
+    font-size: 48px;
+    color: #fff;
+    mask: radial-gradient(
+        circle at 0 50%,
+        #000,
+        transparent 10%,
+        transparent 0
+    );
+    mask-size: 100%;
+    animation: scale 5s infinite;
+}
+// 文字的渐现-从右到左
+.radial {
+    mask: radial-gradient(
+        circle at 50% 0,
+        #000,
+        transparent 20%,
+        transparent 0
+    );
+    mask-size: 100% 100%;
+    animation: scale2 5s infinite;
+}
+@keyframes scale {
+    50%,
+    100% {
+        mask-size: 2000%;
+    }
+}
+@keyframes scale2 {
+    50%,
+    100% {
+        mask-size: 100% 2000%;
+    }
+}
+
+
+.roll_btn {
+    position: relative;
+    margin: auto;
+    width: 120px;
+    line-height: 64px;
+    text-align: center;
+    color: #fff;
+    font-size: 20px;
+    border: 2px solid gold;
+    border-radius: 10px;
+    background: gold;
+    transition: all .3s;
+    cursor: pointer;
+    
+    &:hover {
+        filter: contrast(1.1);
+    }
+    
+    &:active {
+        filter: contrast(0.9);
+    }
+    
+    &::before,
+    &::after {
+        content: "";
+        position: absolute;
+        top: -10px;
+        left: -10px;
+        right: -10px;
+        bottom: -10px;
+        border: 2px solid gold;
+        transition: all 2s;
+        animation: clippath 3s infinite linear;
+        border-radius: 10px;
+    }
+    
+    &::after {
+        animation: clippath 3s infinite -1.5s linear;
+    }
+}
+
+@keyframes clippath {
+    0%,
+    100% {
+        clip-path: inset(0 0 98% 0);
+    }
+    
+    25% {
+        clip-path: inset(0 98% 0 0);
+    }
+    50% {
+        clip-path: inset(98% 0 0 0);
+    }
+    75% {
+        clip-path: inset(0 0 0 98%);
+    }
+}
+
+.bg::before {
+    background: rgba(255, 215, 0, .5);
+}

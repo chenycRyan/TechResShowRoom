@@ -1,0 +1,114 @@
+$url: '../../assets/imgs/';
+.login{
+    width: 100%;
+    height: 100%;
+    background-image: url($url + 'login-bg.jpg');
+    background-size: cover;
+    background-position: center;
+    position: relative;
+    text-align: center;
+    display: flex;
+    align-items: center;
+    flex-direction: column;
+    .sysName {
+        color: white;
+        font-size: 46px;
+        letter-spacing: 10px;
+        margin: 3% 0 15% 0;
+    }
+    .logo {
+        position: absolute;
+        left: 30px;
+        top: 30px;
+        background-image: url($url + 'logo.png');
+        background-size: 100% 100%;
+        width: 180px;
+        height: 35px;
+    }
+    &-con{
+        // position: absolute;
+        // right: 37%;
+        // top: 50%;
+        transform: translateY(-60%);
+        width: 505px;
+        height: 324px;
+        &-header{
+            font-size: 16px;
+            font-weight: 300;
+            text-align: center;
+            padding: 30px 0;
+           
+        }
+        .form-con{
+            padding: 10px 0 0;
+        }
+        .login-tip{
+            font-size: 10px;
+            text-align: center;
+            color: #c3c3c3;
+        }
+
+        
+        .ivu-card {
+            height: 324px;
+            background: url($url + 'login-form-bg.png');
+            background-size: 100% 100%;
+            padding: 0 15%;
+        }
+        .ivu-card-head {
+            border-bottom: none;  
+            span {
+                display: none;
+                
+            }              
+        }
+        .ivu-form-item-content {
+            background: url($url + 'btn.png');
+            background-size: 100% 100%;
+            height: 40px;
+            &:hover {
+                background: url($url + 'btn-hover.png');
+                background-size: 100% 100%;
+            }
+        }
+        .ivu-btn-primary {
+            background: url($url + 'login-btn.png');
+            background-size: 100% 100%;
+            height: 40px;
+            border:none;
+            &:hover {
+                background: url($url + 'login-btn-hover.png');
+                background-size: 100% 100%;
+            }
+        }
+        .ivu-input-group .ivu-input{
+            background: transparent;
+            border: none;
+            height: 40px;
+        }
+        .ivu-input-group-prepend {
+            background: transparent;
+            border: none;
+            height: 40px;
+        }
+        .ivu-input {
+            color: #e5b917;
+            font-size: 16px;
+        }
+        .ivu-input-group-prepend {
+            color: #587ff9;
+        }     
+        
+    }
+    .comss {
+        color: #8bb0df;
+        position: absolute;
+        bottom: 20px;
+        width: 100%;
+        text-align: center;
+        font-size: 16px;
+        text-shadow: 0 0 10px #000;
+    }
+   
+}
+
